@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arisan Kocok 13 Juta</title>
+  <!-- FontAwesome untuk Icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti Library untuk Efek Kertas Warna-warni -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Simulation Mobile Frame */
+    .app-container {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 880px;
+      background: linear-gradient(180deg, #cbe2cf 0%, #b8d8be 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Header Bar */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px 10px 20px;
+    }
+
+    .header-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .menu-btn {
+      font-size: 24px;
+      color: #333;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+    }
+
+    /* Winner Name Badge */
+    .winner-badge-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .winner-badge {
+      background-color: #8ed3a6;
+      color: #ffffff;
+      padding: 10px 32px;
+      border-radius: 12px;
+      font-size: 22px;
+      font-weight: 600;
+      text-shadow: 0px 1px 2px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      min-width: 160px;
+      text-align: center;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+
+    /* Wheel Section */
+    .wheel-area {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    /* Pointer Arrow */
+    .pointer {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 28px solid #ffffff;
+      z-index: 10;
+      filter: drop-shadow(0px 3px 3px rgba(0, 0, 0, 0.2));
+    }
+
+    /* Wheel Canvas */
+    #wheelCanvas {
+      width: 330px;
+      height: 330px;
+      border-radius: 50%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 0.99);
+    }
+
+    /* Center Spin Button */
+    .center-button {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      background-color: #f2f2f2;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 5;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      border: 4px solid #ffffff;
+    }
+
+    .center-button i {
+      font-size: 26px;
+      color: #444;
+      transition: transform 0.3s ease;
+    }
+
+    .center-button:active i {
+      transform: rotate(180deg);
+    }
+
+    /* Bottom Action Toolbar */
+    .toolbar-container {
+      display: flex;
+      justify-content: center;
+      padding: 0 20px 15px 20px;
+    }
+
+    .toolbar {
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(5px);
+      width: 100%;
+      max-width: 320px;
+      height: 54px;
+      border-radius: 28px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 0 10px;
+    }
+
+    .tool-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #555;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .tool-btn:hover {
+      background-color: rgba(0,0,0,0.05);
+    }
+
+    .star-icon {
+      color: #fbc02d;
+    }
+
+    /* Bottom Banner */
+    .banner {
+      background-color: #4353ff;
+      color: white;
+      text-align: center;
+      padding: 14px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 0 15px 15px 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(67, 83, 255, 0.3);
+      cursor: pointer;
+    }
+
+    /* Modal Setting (Fitur Rahasia) */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-height: 80vh;
+      border-radius: 16px;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-modal {
+      cursor: pointer;
+      font-size: 20px;
+      color: #888;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    textarea.form-control {
+      height: 110px;
+      resize: vertical;
+    }
+
+    .btn-save {
+      width: 100%;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .secret-badge {
+      background: #fff3cd;
+      color: #856404;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #ffeeba;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-title" id="titleText">Arisan kocok 13 juta</div>
+      <i class="fa-solid fa-bars menu-btn" onclick="openModal()"></i>
+    </div>
+
+    <!-- Winner Display Badge -->
+    <div class="winner-badge-container">
+      <div class="winner-badge" id="winnerText">Edward</div>
+    </div>
+
+    <!-- Wheel Section -->
+    <div class="wheel-area">
+      <div class="pointer"></div>
+      <canvas id="wheelCanvas" width="600" height="600"></canvas>
+      <div class="center-button" onclick="spinWheel()">
+        <i class="fa-solid fa-rotate-right"></i>
+      </div>
+    </div>
+
+    <!-- Bottom Action Toolbar -->
+    <div class="toolbar-container">
+      <div class="toolbar">
+        <button class="tool-btn star-icon"><i class="fa-solid fa-star"></i></button>
+        <button class="tool-btn" onclick="openModal()"><i class="fa-solid fa-plus"></i></button>
+        <button class="tool-btn" onclick="openModal()"><i class="fa-solid fa-pen"></i></button>
+        <button class="tool-btn"><i class="fa-solid fa-share-nodes"></i></button>
+      </div>
+    </div>
+
+    <!-- Bottom Banner -->
+    <div class="banner">
+      Get Premium!
+    </div>
+
+    <!-- Modal Setting (Atur Nama & Pemenang) -->
+    <div class="modal-overlay" id="settingModal">
+      <div class="modal-content">
+        <div class="modal-title">
+          <span>Pengaturan Kocokan</span>
+          <i class="fa-solid fa-xmark close-modal" onclick="closeModal()"></i>
+        </div>
+
+        <div class="secret-badge">
+          <i class="fa-solid fa-user-secret"></i> <b>Fitur Rahasia:</b> Pilih "Pemenang Rahasia" di bawah agar putaran roda SELALU berhenti di nama tersebut!
+        </div>
+
+        <div class="form-group">
+          <label>Judul Arisan:</label>
+          <input type="text" id="inputTitle" class="form-control" value="Arisan kocok 13 juta">
+        </div>
+
+        <div class="form-group">
+          <label>Daftar Peserta (Satu nama per baris):</label>
+          <textarea id="inputNames" class="form-control">Edward
+Dadan
+Griya
+Heri
+Griya
+Dadan
+Heri & aqila
+Kingspa
+Andini
+Griya
+Andy
+Kak cici</textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="color: #d9534f;">SETTING PEMENANG RAHASIA:</label>
+          <select id="riggedWinnerSelect" class="form-control" style="border: 2px solid #d9534f;">
+            <option value="ACAK">-- ACAK / RANDOM (Jujur) --</option>
+          </select>
+        </div>
+
+        <button class="btn-save" onclick="saveSettings()">Simpan & Perbarui Roda</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data Default Peserta (Sesuai Gambar)
+    let participants = [
+      "Edward", "Dadan", "Griya", "Heri", 
+      "Griya", "Dadan", "Heri & aqila", 
+      "Kingspa", "Andini", "Griya", "Andy", "Kak cici"
+    ];
+
+    // Warna Slice Sesuai Foto
+    const colors = [
+      "#8ed3a6", // Light Green
+      "#2980b9", // Blue
+      "#e84393", // Pink
+      "#6c5ce7", // Purple
+      "#f39c12", // Orange
+      "#16a085", // Dark Teal/Green
+      "#e84393", // Magenta
+      "#e17055", // Dark Pink / Coral
+      "#0984e3", // Light Blue
+      "#6c5ce7", // Violet
+      "#f1c40f", // Yellow
+      "#8ed3a6"  // Light Green
+    ];
+
+    let currentRotation = 0;
+    let isSpinning = false;
+    let riggedWinner = "ACAK"; // Pemenang yang disetting
+
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Inisialisasi awal
+    window.onload = () => {
+      drawWheel();
+      updateRiggedSelectOptions();
+    };
+
+    // Fungsi Menggambar Roda
+    function drawWheel() {
+      const numSlices = participants.length;
+      const sliceAngle = (2 * Math.PI) / numSlices;
+      const radius = canvas.width / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < numSlices; i++) {
+        const angle = i * sliceAngle;
+        
+        // Gambar Potongan Roda
+        ctx.beginPath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, angle, angle + sliceAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // Garis Pembatas Sektor
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Tulis Nama Peserta
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 22px Arial";
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 4;
+        
+        // Teks ditulis melintang dari luar ke dalam
+        ctx.fillText(participants[i], radius - 30, 8);
+        ctx.restore();
+      }
+    }
+
+    // Fungsi Memutar Roda
+    function spinWheel() {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      const numSlices = participants.length;
+      const sliceAngle = 360 / numSlices;
+
+      let winningIndex = -1;
+
+      // Cek apakah ada Pemenang Rahasia yang ditentukan
+      if (riggedWinner !== "ACAK") {
+        // Cari indeks nama yang disetting
+        winningIndex = participants.findIndex(name => name === riggedWinner);
+      }
+
+      // Jika acak / tidak ketemu, pilih indeks random
+      if (winningIndex === -1) {
+        winningIndex = Math.floor(Math.random() * numSlices);
+      }
+
+      // Hitung Sudut Penyetelan
+      // Pointer berada di atas (270 derajat)
+      const targetSliceCenter = (winningIndex + 0.5) * sliceAngle;
+      
+      // Putaran penuh minimum (5-8 kali putaran)
+      const extraRounds = 360 * 6;
+      
+      // Hitung total rotasi baru
+      const targetDegree = 270 - targetSliceCenter;
+      const currentMod = currentRotation % 360;
+      
+      let additionalRotation = (targetDegree - currentMod) % 360;
+      if (additionalRotation <= 0) additionalRotation += 360;
+
+      currentRotation += extraRounds + additionalRotation;
+
+      // Terapkan animasi rotasi CSS
+      canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+      // Setelah animasi selesai
+      setTimeout(() => {
+        isSpinning = false;
+        const winnerName = participants[winningIndex];
+        
+        // Tampilkan nama di badge atas
+        const winnerBadge = document.getElementById("winnerText");
+        winnerBadge.innerText = winnerName;
+        winnerBadge.style.transform = "scale(1.2)";
+        setTimeout(() => winnerBadge.style.transform = "scale(1)", 200);
+
+        // Efek Confetti (Kertas warna-warni)
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
+      }, 4000); // Sesuai durasi CSS transition 4 detik
+    }
+
+    // Fungsi Buka Modal Setting
+    function openModal() {
+      document.getElementById("settingModal").style.display = "flex";
+      updateRiggedSelectOptions();
+    }
+
+    // Fungsi Tutup Modal
+    function closeModal() {
+      document.getElementById("settingModal").style.display = "none";
+    }
+
+    // Update Dropdown Pemenang Rahasia
+    function updateRiggedSelectOptions() {
+      const select = document.getElementById("riggedWinnerSelect");
+      const currentSelected = select.value;
+      
+      select.innerHTML = '<option value="ACAK">-- ACAK / RANDOM (Jujur) --</option>';
+      
+      participants.forEach((name, index) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = `Pemenang: ${name} (Sektor ${index + 1})`;
+        select.appendChild(opt);
+      });
+
+      select.value = currentSelected;
+    }
+
+    // Simpan Pengaturan
+    function saveSettings() {
+      const titleInput = document.getElementById("inputTitle").value.trim();
+      const namesInput = document.getElementById("inputNames").value.trim();
+      riggedWinner = document.getElementById("riggedWinnerSelect").value;
+
+      if (titleInput) {
+        document.getElementById("titleText").innerText = titleInput;
+      }
+
+      if (namesInput) {
+        participants = namesInput.split("\n").map(n => n.trim()).filter(n => n !== "");
+      }
+
+      drawWheel();
+      closeModal();
+    }
+  </script>
+</body>
+</html>
